@@ -40,7 +40,7 @@ describe('ReactElementValidator', function() {
     spyOn(console, 'warn');
     var Component = React.createFactory(ComponentClass);
 
-    Component(null, [ Component(), Component() ]);
+    Component(null, [Component(), Component()]);
 
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toContain(
@@ -64,7 +64,7 @@ describe('ReactElementValidator', function() {
     var ComponentWrapper = React.createClass({
       displayName: 'ComponentWrapper',
       render: function() {
-        return InnerComponent({ childSet: [ Component(), Component() ] });
+        return InnerComponent({childSet: [Component(), Component()] });
       }
     });
 
@@ -80,6 +80,46 @@ describe('ReactElementValidator', function() {
     );
   });
 
+  it('warns for keys for arrays with no owner or parent info', function() {
+    spyOn(console, 'warn');
+
+    var Anonymous = React.createClass({
+      displayName: undefined,
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var divs = [
+      <div />,
+      <div />
+    ];
+    ReactTestUtils.renderIntoDocument(<Anonymous>{divs}</Anonymous>);
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: Each child in an array or iterator should have a unique ' +
+      '"key" prop. See http://fb.me/react-warning-keys for more information.'
+    );
+  });
+
+  it('warns for keys for arrays of elements with no owner info', function() {
+    spyOn(console, 'warn');
+
+    var divs = [
+      <div />,
+      <div />
+    ];
+    ReactTestUtils.renderIntoDocument(<div>{divs}</div>);
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: Each child in an array or iterator should have a unique ' +
+      '"key" prop. Check the React.render call using <div>. See ' +
+      'http://fb.me/react-warning-keys for more information.'
+    );
+  });
+
   it('warns for keys for iterables of elements in rest args', function() {
     spyOn(console, 'warn');
     var Component = React.createFactory(ComponentClass);
@@ -90,7 +130,7 @@ describe('ReactElementValidator', function() {
         return {
           next: function() {
             var done = ++i > 2;
-            return { value: done ? undefined : Component(), done: done };
+            return {value: done ? undefined : Component(), done: done};
           }
         };
       }
@@ -108,7 +148,7 @@ describe('ReactElementValidator', function() {
     spyOn(console, 'warn');
     var Component = React.createFactory(ComponentClass);
 
-    Component(null, [ Component({key: '#1'}), Component({key: '#2'}) ]);
+    Component(null, [Component({key: '#1'}), Component({key: '#2'})]);
 
     expect(console.warn.argsForCall.length).toBe(0);
   });
@@ -141,7 +181,7 @@ describe('ReactElementValidator', function() {
     spyOn(console, 'warn');
     var Component = React.createFactory(ComponentClass);
 
-    Component(null, frag({ 1: Component(), 2: Component() }));
+    Component(null, frag({1: Component(), 2: Component()}));
 
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toContain(
@@ -159,7 +199,7 @@ describe('ReactElementValidator', function() {
         return {
           next: function() {
             var done = ++i > 2;
-            return { value: done ? undefined : [i, Component()], done: done };
+            return {value: done ? undefined : [i, Component()], done: done};
           }
         };
       }
@@ -207,7 +247,7 @@ describe('ReactElementValidator', function() {
     });
     var ParentComp = React.createClass({
       render: function() {
-        return React.createElement(MyComp, { color: 123 });
+        return React.createElement(MyComp, {color: 123});
       }
     });
     ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
@@ -322,12 +362,31 @@ describe('ReactElementValidator', function() {
     expect(console.warn.calls.length).toBe(2);
   });
 
-  it('should warn if a fragment is used without the wrapper', function () {
+  it('should warn if a fragment is used without the wrapper', function() {
     spyOn(console, 'warn');
     var child = React.createElement('span');
-    React.createElement('div', null, { a: child, b: child });
+    React.createElement('div', null, {a: child, b: child});
     expect(console.warn.calls.length).toBe(1);
     expect(console.warn.calls[0].args[0]).toContain('use of a keyed object');
+  });
+
+  it('should warn when accessing .type on an element factory', function() {
+    spyOn(console, 'warn');
+    var TestComponent = React.createClass({
+      render: function() {
+        return <div />;
+      }
+    });
+    var TestFactory = React.createFactory(TestComponent);
+    expect(TestFactory.type).toBe(TestComponent);
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: Factory.type is deprecated. Access the class directly before ' +
+      'passing it to createFactory.'
+    );
+    // Warn once, not again
+    expect(TestFactory.type).toBe(TestComponent);
+    expect(console.warn.argsForCall.length).toBe(1);
   });
 
 });

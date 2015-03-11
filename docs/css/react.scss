@@ -608,8 +608,8 @@ div.CodeMirror pre, div.CodeMirror-linenumber, code {
   @include code-typography;
 }
 
-div.CodeMirror-linenumber:after {
-  content: '.';
+div.CodeMirror-linenumber {
+  text-align: right;
 }
 
 .CodeMirror, div.CodeMirror-gutters, div.highlight {
@@ -793,6 +793,7 @@ p code {
 // Twitter embeds. Need to !important because they inline margin on the iframe.
 div[data-twttr-id] iframe {
   margin: 10px auto !important;
+  width: 100% !important;
 }
 
 /* Acknowledgements */
